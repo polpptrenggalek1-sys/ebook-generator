@@ -97,7 +97,7 @@ const SUPABASE_URL = 'https://gcbubfexbzaymctnpcjo.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjYnViZmV4YnpheW1jdG5wY2pvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEwMjYwODksImV4cCI6MjA2NjYwMjA4OX0.GqH6gVuAux7uzTrAasU2QA_9A_w1dXT'; // Ini adalah "publishable key" Anda
 
 // Inisialisasi Supabase
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+var supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // State
 let quill = null;
