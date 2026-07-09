@@ -150,13 +150,13 @@
 
       <!-- TOMBOL AKSI -->
       <div class="form-actions">
-        <button type="button" class="btn btn-outline" onclick="document.getElementById('ebookForm').reset()">
+        <button type="button" class="btn btn-outline" id="resetBtn">
           <i class="fas fa-redo"></i> Reset
         </button>
-        <button type="button" class="btn btn-primary" id="ebookSubmitBtn" onclick="generatePDF()">
+        <button type="button" class="btn btn-primary" id="ebookSubmitBtn">
           <i class="fas fa-file-pdf"></i> Generate PDF & Simpan
         </button>
-      </div>
+      </div>    
     </form>
     <div id="debug-info"></div>
   </div>
@@ -244,19 +244,35 @@
 
   // Generate PDF & Save to Supabase
   async function generatePDF() {
+    console.log('✅ generatePDF() dipanggil');
     const btn = document.getElementById('ebookSubmitBtn');
+    if (!btn) {
+      console.error('❌ Tombol Generate tidak ditemukan');
+      return;
+    }
+
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menghasilkan PDF...';
     debugInfo('▶️ Proses dimulai...');
 
+    // Validasi judul
+    const judul = document.getElementById('eb-judul').value.trim();
+    if (!judul) {
+      showToast('Judul wajib diisi!', 'error');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-file-pdf"></i> Generate PDF & Simpan';
+      return;
+    }
+
     let htmlContent = '';
     if (quill) htmlContent = quill.root.innerHTML;
     else {
-      const txt = document.getElementById('fallback-editor').value;
+      const fallback = document.getElementById('fallback-editor');
+      const txt = fallback ? fallback.value : '';
       htmlContent = '<p>' + txt.replace(/\n/g, '</p><p>') + '</p>';
     }
 
-    if (!htmlContent || htmlContent === '<p><br></p>') {
+    if (!htmlContent || htmlContent === '<p><br></p>' || htmlContent === '<p></p>') {
       showToast('Konten tidak boleh kosong!', 'error');
       btn.disabled = false;
       btn.innerHTML = '<i class="fas fa-file-pdf"></i> Generate PDF & Simpan';
@@ -270,7 +286,7 @@
     try {
       const pdfBlob = await html2pdf().set({
         margin: [2, 2, 2, 2],
-        filename: document.getElementById('eb-judul').value + '.pdf',
+        filename: judul + '.pdf',
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2 },
         jsPDF: { unit: 'cm', format: 'a4', orientation: 'portrait' }
@@ -279,13 +295,13 @@
       document.body.removeChild(pdfElement);
 
       const bookData = {
-        judul: document.getElementById('eb-judul').value,
-        pengarang: document.getElementById('eb-pengarang').value,
-        penerbit: document.getElementById('eb-penerbit').value,
+        judul: judul,
+        pengarang: document.getElementById('eb-pengarang').value.trim(),
+        penerbit: document.getElementById('eb-penerbit').value.trim(),
         tahun: parseInt(document.getElementById('eb-tahun').value) || null,
         kategori_id: parseInt(document.getElementById('eb-kategori').value),
         bahasa: document.getElementById('eb-bahasa').value,
-        sinopsis: document.getElementById('eb-sinopsis').value,
+        sinopsis: document.getElementById('eb-sinopsis').value.trim(),
         file_url: ''
       };
 
@@ -295,14 +311,17 @@
       const url = URL.createObjectURL(pdfBlob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = bookData.judul + '.pdf';
+      a.download = judul + '.pdf';
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
       showToast('E‑book berhasil dibuat dan disimpan!');
       document.getElementById('ebookForm').reset();
       if (quill) quill.setContents([]);
     } catch (err) {
+      console.error('Error generatePDF:', err);
       showToast('Gagal: ' + err.message, 'error');
       debugInfo('❌ Error: ' + err.message);
     } finally {
@@ -310,6 +329,33 @@
       btn.innerHTML = '<i class="fas fa-file-pdf"></i> Generate PDF & Simpan';
     }
   }
+
+  // =====================
+  // EVENT LISTENERS (pengganti onclick di HTML)
+  // =====================
+  document.addEventListener('DOMContentLoaded', function() {
+    // Tombol Generate
+    const submitBtn = document.getElementById('ebookSubmitBtn');
+    if (submitBtn) {
+      submitBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        generatePDF();
+      });
+    } else {
+      console.error('❌ Tombol Generate tidak ditemukan saat DOM siap');
+    }
+
+    // Tombol Reset
+    const resetBtn = document.getElementById('resetBtn');
+    if (resetBtn) {
+      resetBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        document.getElementById('ebookForm').reset();
+        if (quill) quill.setContents([]);
+      });
+    }
+  });
 
   // Init
   window.onload = () => {
