@@ -264,6 +264,15 @@
       return;
     }
 
+    // Validasi kategori (TAMBAHAN)
+    const kategoriId = document.getElementById('eb-kategori').value;
+    if (!kategoriId) {
+      showToast('Kategori wajib dipilih!', 'error');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-file-pdf"></i> Generate PDF & Simpan';
+      return;
+    }
+
     let htmlContent = '';
     if (quill) htmlContent = quill.root.innerHTML;
     else {
@@ -299,7 +308,7 @@
         pengarang: document.getElementById('eb-pengarang').value.trim(),
         penerbit: document.getElementById('eb-penerbit').value.trim(),
         tahun: parseInt(document.getElementById('eb-tahun').value) || null,
-        kategori_id: parseInt(document.getElementById('eb-kategori').value),
+        kategori_id: parseInt(kategoriId),  // sudah divalidasi di atas
         bahasa: document.getElementById('eb-bahasa').value,
         sinopsis: document.getElementById('eb-sinopsis').value.trim(),
         file_url: ''
@@ -331,38 +340,40 @@
   }
 
   // =====================
-  // EVENT LISTENERS (pengganti onclick di HTML)
+  // INISIALISASI GABUNGAN (PERBAIKAN UTAMA)
   // =====================
   document.addEventListener('DOMContentLoaded', function() {
-    // Tombol Generate
+    // 1. Init komponen halaman
+    initEditor();
+    loadCategories();
+    debugInfo('📋 Halaman siap & menginisialisasi...');
+
+    // 2. Event Listener Tombol Generate
     const submitBtn = document.getElementById('ebookSubmitBtn');
     if (submitBtn) {
       submitBtn.addEventListener('click', function(e) {
         e.preventDefault();
-        e.stopPropagation();
         generatePDF();
       });
+      console.log('✅ Event listener tombol Generate berhasil dipasang');
     } else {
-      console.error('❌ Tombol Generate tidak ditemukan saat DOM siap');
+      console.error('❌ Tombol Generate tidak ditemukan di DOM');
     }
 
-    // Tombol Reset
+    // 3. Event Listener Tombol Reset
     const resetBtn = document.getElementById('resetBtn');
     if (resetBtn) {
       resetBtn.addEventListener('click', function(e) {
         e.preventDefault();
         document.getElementById('ebookForm').reset();
         if (quill) quill.setContents([]);
+        showToast('Form berhasil di-reset', 'info');
       });
     }
   });
 
-  // Init
-  window.onload = () => {
-    initEditor();
-    loadCategories();
-    debugInfo('📋 Halaman siap');
-  };
+  // Hapus window.onload agar tidak bentrok
+  window.onload = null;
 </script>
 </body>
 </html>
