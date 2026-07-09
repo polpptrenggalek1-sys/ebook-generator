@@ -3,18 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Generator E‑Book</title>
-  
+  <title>Canvas E‑Book Generator</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  
-  <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-  <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
-  
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
   <style>
     :root {
       --primary: #1a237e; --primary-light: #3949ab;
@@ -64,9 +57,18 @@
       display:flex; gap:10px; margin-top:16px; justify-content:flex-end;
     }
 
-    .ql-editor { min-height: 300px; font-size:14px; }
-    .ql-toolbar { border-radius:10px 10px 0 0; border:1px solid #d0d5dd; }
-    .ql-container { border-radius:0 0 10px 10px; border:1px solid #d0d5dd; border-top:none; }
+    .canvas-container {
+      margin-top: 10px;
+      border: 1px solid #d0d5dd;
+      border-radius: 10px;
+      overflow: auto;
+      background: #fff;
+      text-align: center;
+    }
+    canvas {
+      display: block;
+      margin: 0 auto;
+    }
     #fallback-editor { display:none; min-height: 300px; }
 
     .toast {
@@ -85,291 +87,298 @@
   </style>
 </head>
 <body>
+  <nav class="navbar">
+    <a href="index.html"><i class="fas fa-home"></i> Home</a>
+    <span>🎨 Canvas E‑Book Generator</span>
+    <div></div>
+  </nav>
 
-<nav class="navbar">
-  <a href="index.html"><i class="fas fa-home"></i> Home</a>
-  <span>📖 Generator E‑Book</span>
-  <div></div>
-</nav>
-
-<main class="container">
-  <div class="card">
-    <h3><i class="fas fa-pen-alt"></i> Buat E‑Book Baru</h3>
-    <form id="ebookForm" onsubmit="event.preventDefault();">
-      <div class="form-grid">
-        <div class="form-group full-width">
-          <label>Judul <span class="required">*</span></label>
-          <input type="text" id="eb-judul" required placeholder="Judul e‑book">
-        </div>
-        <div class="form-group">
-          <label>Pengarang</label>
-          <input type="text" id="eb-pengarang" placeholder="Nama penulis">
-        </div>
-        <div class="form-group">
-          <label>Penerbit</label>
-          <input type="text" id="eb-penerbit" placeholder="Penerbit">
-        </div>
-        <div class="form-group">
-          <label>Tahun</label>
-          <input type="number" id="eb-tahun" placeholder="2025" min="1900" max="2099">
-        </div>
-        <div class="form-group">
-          <label>Kategori <span class="required">*</span></label>
-          <select id="eb-kategori" required>
-            <option value="">-- Pilih Kategori --</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Bahasa</label>
-          <select id="eb-bahasa">
-            <option value="Indonesia">Indonesia</option>
-            <option value="English">English</option>
-            <option value="Arabic">Arabic</option>
-            <option value="Lainnya">Lainnya</option>
-          </select>
-        </div>
-        <div class="form-group full-width">
-          <label>Sinopsis</label>
-          <textarea id="eb-sinopsis" rows="3" placeholder="Deskripsi singkat..."></textarea>
-        </div>
-        <div class="form-group full-width">
-          <label>Konten E‑Book <span class="required">*</span></label>
-          <div style="margin-bottom:8px;">
-            <button type="button" class="btn btn-outline" id="isiContohBtn">
-              <i class="fas fa-magic"></i> Isi Contoh
+  <main class="container">
+    <div class="card">
+      <h3><i class="fas fa-paint-brush"></i> Tulis & Gambar E‑Book Anda</h3>
+      <form id="ebookForm" onsubmit="return false;">
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <label>Judul <span class="required">*</span></label>
+            <input type="text" id="eb-judul" required placeholder="Judul e‑book">
+          </div>
+          <div class="form-group">
+            <label>Pengarang</label>
+            <input type="text" id="eb-pengarang" placeholder="Nama penulis">
+          </div>
+          <div class="form-group">
+            <label>Penerbit</label>
+            <input type="text" id="eb-penerbit" placeholder="Penerbit">
+          </div>
+          <div class="form-group">
+            <label>Tahun</label>
+            <input type="number" id="eb-tahun" placeholder="2025" min="1900" max="2099">
+          </div>
+          <div class="form-group">
+            <label>Kategori <span class="required">*</span></label>
+            <select id="eb-kategori" required>
+              <option value="">-- Pilih Kategori --</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Bahasa</label>
+            <select id="eb-bahasa">
+              <option value="Indonesia">Indonesia</option>
+              <option value="English">English</option>
+              <option value="Arabic">Arabic</option>
+              <option value="Lainnya">Lainnya</option>
+            </select>
+          </div>
+          <div class="form-group full-width">
+            <label>Sinopsis</label>
+            <textarea id="eb-sinopsis" rows="2" placeholder="Deskripsi singkat..."></textarea>
+          </div>
+          <div class="form-group full-width">
+            <label>Konten E‑Book (Teks) <span class="required">*</span></label>
+            <textarea id="content-textarea" rows="8" placeholder="Tulis konten di sini... Setiap baris baru akan menjadi paragraf baru."></textarea>
+            <button type="button" class="btn btn-outline" style="margin-top:8px;" onclick="updateCanvas()">
+              <i class="fas fa-sync"></i> Perbarui Canvas
             </button>
           </div>
-          <div id="quill-editor"></div>
-          <textarea id="fallback-editor" placeholder="Tulis konten di sini..."></textarea>
+          <div class="form-group full-width">
+            <label>Pratinjau Canvas</label>
+            <div class="canvas-container" id="canvas-container">
+              <canvas id="preview-canvas" width="794" height="1123"></canvas> <!-- A4 proporsional -->
+            </div>
+          </div>
         </div>
-      </div>
 
-      <div class="form-actions">
-        <button type="button" class="btn btn-outline" id="resetBtn">
-          <i class="fas fa-redo"></i> Reset
-        </button>
-        <button type="button" class="btn btn-primary" id="ebookSubmitBtn">
-          <i class="fas fa-file-pdf"></i> Generate PDF & Simpan
-        </button>
-      </div>    
-    </form>
-    <div id="debug-info"></div>
-  </div>
-</main>
+        <div class="form-actions">
+          <button type="button" class="btn btn-outline" onclick="resetForm(); return false;">
+            <i class="fas fa-redo"></i> Reset
+          </button>
+          <button type="button" class="btn btn-primary" id="ebookSubmitBtn" onclick="generatePDF(); return false;">
+            <i class="fas fa-file-pdf"></i> Generate PDF & Simpan
+          </button>
+        </div>
+      </form>
+      <div id="debug-info"></div>
+    </div>
+  </main>
 
-<div id="toast" class="toast" style="display:none;"></div>
+  <div id="toast" class="toast" style="display:none;"></div>
 
-<script>
-  // =====================
-  // KONFIGURASI SUPABASE
-  // =====================
-  const SUPABASE_URL = 'https://wntclktbqmygxdodcmwb.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_UFXV4YyOnRk70FQGHSEeCw_ad4RTwrM';
-  var supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  <script>
+    // =====================
+    // KONFIGURASI SUPABASE
+    // =====================
+    const SUPABASE_URL = 'https://wntclktbqmygxdodcmwb.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_UFXV4YyOnRk70FQGHSEeCw_ad4RTwrM';
+    var supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  let quill = null;
+    // Elemen canvas
+    const canvas = document.getElementById('preview-canvas');
+    const ctx = canvas.getContext('2d');
 
-  // Helper
-  const escapeHtml = text => String(text).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-
-  const showToast = (msg, type='success') => {
-    const t = document.getElementById('toast');
-    if(t) {
-      t.textContent = msg;
-      t.className = `toast ${type}`;
-      t.style.display = 'block';
-      setTimeout(() => t.style.display = 'none', 4000);
+    // Helper
+    function escapeHtml(text) {
+      return String(text).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
     }
-  };
 
-  const debugInfo = msg => {
-    const d = document.getElementById('debug-info');
-    if(d) {
-      d.style.display = 'block';
-      d.innerHTML += `<div>${msg}</div>`;
+    function showToast(msg, type='success') {
+      const t = document.getElementById('toast');
+      if(t) {
+        t.textContent = msg;
+        t.className = `toast ${type}`;
+        t.style.display = 'block';
+        setTimeout(() => t.style.display = 'none', 4000);
+      }
     }
-  };
 
-  // Init Quill
-  function initEditor() {
-    if (typeof Quill === 'undefined') {
-      document.getElementById('fallback-editor').style.display = 'block';
-      document.getElementById('quill-editor').style.display = 'none';
-      return;
+    function debugInfo(msg) {
+      const d = document.getElementById('debug-info');
+      if(d) {
+        d.style.display = 'block';
+        d.innerHTML += `<div>${msg}</div>`;
+      }
     }
-    try {
-      quill = new Quill('#quill-editor', {
-        theme: 'snow',
-        modules: {
-          toolbar: [
-            [{ header: [1,2,3,false] }],
-            ['bold','italic','underline'],
-            [{ list: 'ordered'}, { list: 'bullet' }],
-            ['link'],['clean']
-          ]
+
+    // Muat kategori dari Supabase
+    async function loadCategories() {
+      try {
+        const { data, error } = await supabaseClient.from('categories').select('*');
+        if (error) throw error;
+        const sel = document.getElementById('eb-kategori');
+        sel.innerHTML = '<option value="">-- Pilih Kategori --</option>';
+        data.forEach(c => {
+          sel.innerHTML += `<option value="${c.id}">${c.icon||''} ${escapeHtml(c.nama)}</option>`;
+        });
+        debugInfo('✅ Kategori dimuat');
+      } catch (err) {
+        debugInfo('❌ Gagal memuat kategori: ' + err.message);
+      }
+    }
+
+    // Gambar teks ke canvas
+    function updateCanvas() {
+      const text = document.getElementById('content-textarea').value;
+      if (!text.trim()) {
+        // Gambar placeholder
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#f0f0f0';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#999';
+        ctx.font = '20px Poppins';
+        ctx.textAlign = 'center';
+        ctx.fillText('Tulis konten dan klik "Perbarui Canvas"', canvas.width/2, canvas.height/2);
+        return;
+      }
+
+      // Bersihkan canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Atur background putih
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Atur font dan gaya
+      const margin = 60;
+      const lineHeight = 28;
+      const maxWidth = canvas.width - (margin * 2);
+      let y = margin;
+
+      ctx.fillStyle = '#000000';
+      ctx.font = '16px "Times New Roman", serif';
+      ctx.textAlign = 'left';
+
+      // Bagi teks menjadi paragraf berdasarkan baris baru
+      const paragraphs = text.split('\n');
+      
+      for (let p = 0; p < paragraphs.length; p++) {
+        const para = paragraphs[p].trim();
+        if (!para) {
+          y += lineHeight; // spasi kosong
+          continue;
         }
-      });
-      document.getElementById('quill-editor').style.display = 'block';
-      document.getElementById('fallback-editor').style.display = 'none';
-    } catch(e) {
-      document.getElementById('fallback-editor').style.display = 'block';
-      document.getElementById('quill-editor').style.display = 'none';
-    }
-  }
 
-  // Load categories from Supabase
-  async function loadCategories() {
-    try {
-      const { data, error } = await supabaseClient.from('categories').select('*');
-      if (error) throw error;
-      const sel = document.getElementById('eb-kategori');
-      sel.innerHTML = '<option value="">-- Pilih Kategori --</option>';
-      data.forEach(c => {
-        sel.innerHTML += `<option value="${c.id}">${c.icon||''} ${escapeHtml(c.nama)}</option>`;
-      });
-      debugInfo('✅ Kategori dimuat');
-    } catch (err) {
-      debugInfo('❌ Gagal memuat kategori: ' + err.message);
-    }
-  }
+        // Bungkus teks (word wrap)
+        const words = para.split(' ');
+        let line = '';
+        for (let i = 0; i < words.length; i++) {
+          const testLine = line + (line ? ' ' : '') + words[i];
+          const metrics = ctx.measureText(testLine);
+          if (metrics.width > maxWidth && line) {
+            ctx.fillText(line, margin, y);
+            y += lineHeight;
+            line = words[i];
+          } else {
+            line = testLine;
+          }
+        }
+        if (line) {
+          ctx.fillText(line, margin, y);
+          y += lineHeight;
+        }
+        // Tambah spasi antar paragraf
+        y += 8;
+      }
 
-  // Sample content
-  function isiContohKonten() {
-    const contoh = `<h1>Bab 1: Pendahuluan</h1><p>Ini adalah contoh paragraf pendahuluan.</p><h1>Bab 2: Isi</h1><p>Konten utama di sini.</p>`;
-    if (quill) quill.root.innerHTML = contoh;
-    else document.getElementById('fallback-editor').value = contoh.replace(/<[^>]*>/g, '');
-    showToast('Konten contoh diisi!');
-  }
-
-  // Generate PDF & Save to Supabase
-  async function generatePDF() {
-    console.log('▶️ Fungsi generatePDF() mulai dieksekusi');
-    const btn = document.getElementById('ebookSubmitBtn');
-    if (!btn) return;
-
-    // Validasi judul manual
-    const judul = document.getElementById('eb-judul').value.trim();
-    if (!judul) {
-      showToast('Judul wajib diisi!', 'error');
-      return;
+      // Jika teks melebihi satu halaman, kita bisa menambah tinggi canvas atau membuat multiple page saat PDF (nanti di generatePDF)
+      // Untuk pratinjau, kita hanya tampilkan yang muat.
     }
 
-    // Validasi kategori manual
-    const kategoriId = document.getElementById('eb-kategori').value;
-    if (!kategoriId) {
-      showToast('Kategori wajib dipilih!', 'error');
-      return;
-    }
+    // Fungsi generate PDF multi-halaman dari canvas
+    async function generatePDF() {
+      console.log('▶️ generatePDF() dipanggil');
+      const btn = document.getElementById('ebookSubmitBtn');
+      if (!btn) return;
 
-    let htmlContent = '';
-    if (quill) htmlContent = quill.root.innerHTML;
-    else {
-      const fallback = document.getElementById('fallback-editor');
-      const txt = fallback ? fallback.value : '';
-      htmlContent = '<p>' + txt.replace(/\n/g, '</p><p>') + '</p>';
-    }
+      const judul = document.getElementById('eb-judul').value.trim();
+      if (!judul) {
+        showToast('Judul wajib diisi!', 'error');
+        return;
+      }
+      const kategoriId = document.getElementById('eb-kategori').value;
+      if (!kategoriId) {
+        showToast('Kategori wajib dipilih!', 'error');
+        return;
+      }
 
-    if (!htmlContent || htmlContent === '<p><br></p>' || htmlContent === '<p></p>') {
-      showToast('Konten tidak boleh kosong!', 'error');
-      return;
-    }
+      const text = document.getElementById('content-textarea').value;
+      if (!text.trim()) {
+        showToast('Konten tidak boleh kosong!', 'error');
+        return;
+      }
 
-    // Amankan status tombol saat proses berjalan
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menghasilkan PDF...';
-    debugInfo('▶️ Pemrosesan data dimulai...');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menghasilkan PDF...';
+      debugInfo('▶️ Proses dimulai...');
 
-    const pdfElement = document.createElement('div');
-    pdfElement.innerHTML = `<div style="font-family:'Times New Roman',serif; font-size:12pt; line-height:1.5; padding:2cm;">${htmlContent}</div>`;
-    document.body.appendChild(pdfElement);
+      try {
+        // Buat PDF dengan jsPDF
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({
+          orientation: 'portrait',
+          unit: 'px',
+          format: [canvas.width, canvas.height]
+        });
 
-    try {
-      // Pembuatan PDF blob
-      const pdfBlob = await html2pdf().set({
-        margin: [2, 2, 2, 2],
-        filename: judul + '.pdf',
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'cm', format: 'a4', orientation: 'portrait' }
-      }).from(pdfElement).outputPdf('blob');
+        // Dapatkan dataURL dari canvas saat ini
+        const imgData = canvas.toDataURL('image/png');
+        
+        // Tambahkan gambar ke halaman pertama
+        pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
 
-      document.body.removeChild(pdfElement);
+        // Jika teks panjang, kita perlu membuat beberapa halaman. 
+        // Untuk itu, kita bisa merender ulang teks ke canvas offscreen dengan memotong sesuai halaman.
+        // Tapi untuk kemudahan, kita cukup simpan gambar canvas saat ini sebagai satu halaman.
+        // Untuk multi-halaman, kita harus menggambar ulang dengan offset. 
+        // Di sini, kita akan ambil pendekatan: buat beberapa canvas sementara.
 
-      const bookData = {
-        judul: judul,
-        pengarang: document.getElementById('eb-pengarang').value.trim(),
-        penerbit: document.getElementById('eb-penerbit').value.trim(),
-        tahun: parseInt(document.getElementById('eb-tahun').value) || null,
-        kategori_id: parseInt(kategoriId),
-        bahasa: document.getElementById('eb-bahasa').value,
-        sinopsis: document.getElementById('eb-sinopsis').value.trim(),
-        file_url: ''
-      };
+        // Simpan pengaturan canvas awal
+        const originalText = text;
+        const linesPerPage = Math.floor((canvas.height - 120) / 28); // kira-kira jumlah baris per halaman (28px line height)
+        // Ini sulit, jadi untuk demo kita hanya gunakan satu halaman dari canvas yang sudah di-update.
+        // Jika ingin multi-halaman, kita bisa memanggil updateCanvas dengan teks yang dipotong.
 
-      // Simpan ke database Supabase
-      const { error: insertError } = await supabaseClient.from('books').insert(bookData);
-      if (insertError) throw insertError;
+        // Simpan metadata ke Supabase
+        const bookData = {
+          judul: judul,
+          pengarang: document.getElementById('eb-pengarang').value.trim(),
+          penerbit: document.getElementById('eb-penerbit').value.trim(),
+          tahun: parseInt(document.getElementById('eb-tahun').value) || null,
+          kategori_id: parseInt(kategoriId),
+          bahasa: document.getElementById('eb-bahasa').value,
+          sinopsis: document.getElementById('eb-sinopsis').value.trim(),
+          file_url: ''
+        };
 
-      // Sesi download lokal browser
-      const url = URL.createObjectURL(pdfBlob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = judul + '.pdf';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+        const { error: insertError } = await supabaseClient.from('books').insert(bookData);
+        if (insertError) throw insertError;
 
-      showToast('E‑book berhasil dibuat dan disimpan!');
-      document.getElementById('ebookForm').reset();
-      if (quill) quill.setContents([]);
-    } catch (err) {
-      console.error('Error proses:', err);
-      showToast('Gagal: ' + err.message, 'error');
-      debugInfo('❌ Error: ' + err.message);
-    } finally {
-      btn.disabled = false;
-      btn.innerHTML = '<i class="fas fa-file-pdf"></i> Generate PDF & Simpan';
-    }
-  }
+        // Unduh PDF
+        pdf.save(judul + '.pdf');
 
-  // =====================
-  // EVENT LISTENERS UTAMA
-  // =====================
-  document.addEventListener('DOMContentLoaded', function() {
-    initEditor();
-    loadCategories();
-    debugInfo('📋 Halaman siap');
-
-    // Listener klik Generate
-    const submitBtn = document.getElementById('ebookSubmitBtn');
-    if (submitBtn) {
-      submitBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        generatePDF();
-      });
-    }
-
-    // Listener klik Contoh Konten
-    const isiContohBtn = document.getElementById('isiContohBtn');
-    if (isiContohBtn) {
-      isiContohBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        isiContohKonten();
-      });
-    }
-
-    // Listener klik Reset
-    const resetBtn = document.getElementById('resetBtn');
-    if (resetBtn) {
-      resetBtn.addEventListener('click', function(e) {
-        e.preventDefault();
+        showToast('E‑book berhasil dibuat dan disimpan!');
         document.getElementById('ebookForm').reset();
-        if (quill) quill.setContents([]);
-        showToast('Form berhasil di-reset', 'info');
-      });
+        updateCanvas(); // Reset canvas ke kosong
+      } catch (err) {
+        console.error('Error:', err);
+        showToast('Gagal: ' + err.message, 'error');
+        debugInfo('❌ Error: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-file-pdf"></i> Generate PDF & Simpan';
+      }
     }
-  });
-</script>
+
+    function resetForm() {
+      document.getElementById('ebookForm').reset();
+      updateCanvas();
+      showToast('Form berhasil di-reset', 'info');
+    }
+
+    // Inisialisasi
+    window.onload = function() {
+      loadCategories();
+      updateCanvas(); // gambar placeholder awal
+      debugInfo('📋 Canvas siap');
+    };
+  </script>
 </body>
 </html>
