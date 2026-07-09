@@ -149,7 +149,7 @@ document.getElementById('quill-editor').style.display = 'none';
 // Load categories from Supabase
 async function loadCategories() {
 try {
-const { data, error } = await supabase.from('categories').select('*');
+const { data, error } = await supabaseClient.from('categories').select('*');
 if (error) throw error;
 const sel = document.getElementById('eb-kategori');
 sel.innerHTML = '<option value="">-- Pilih Kategori --</option>';
@@ -227,7 +227,7 @@ sinopsis: document.getElementById('eb-sinopsis').value,
 file_url: '' // Bisa di-upload ke Supabase Storage nanti
 };
 
-const { error: insertError } = await supabase.from('books').insert(bookData);
+const { error: insertError } = await supabaseClient.from('books').insert(bookData);
 if (insertError) throw insertError;
 
 // Unduh PDF ke komputer user
