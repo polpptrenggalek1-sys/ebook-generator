@@ -1,261 +1,322 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Generator E‑Book Modern</title>
-<!-- Fonts & Icons -->
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-<!-- Quill Editor -->
-<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-<script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
-<!-- html2pdf -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<!-- Supabase -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generator E‑Book</title>
+  
+  <!-- Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  
+  <!-- Quill Editor -->
+  <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+  <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+  
+  <!-- html2pdf -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root {
+      --primary: #1a237e; --primary-light: #3949ab;
+      --accent: #ffc107; --bg: #f0f2f5; --text: #212121;
+      --success: #2e7d32; --danger: #c62828;
+      --shadow: 0 2px 12px rgba(0,0,0,0.08); --radius: 16px;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Poppins',sans-serif; background:var(--bg); color:var(--text); }
+
+    .navbar {
+      background: linear-gradient(135deg, #0d1442, #1a237e);
+      color:white; padding:12px 24px; display:flex; align-items:center; justify-content:space-between;
+    }
+    .navbar a { color:white; text-decoration:none; }
+    .container { max-width: 900px; margin: 30px auto; padding: 0 20px; }
+
+    .card {
+      background: white; border-radius: var(--radius); box-shadow: var(--shadow);
+      padding: 24px; border:1px solid #e8eaf0;
+    }
+    h3 { margin-bottom:20px; color:var(--primary); }
+    .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .form-group { margin-bottom:16px; }
+    .form-group.full-width { grid-column:1/-1; }
+    label { font-size:13px; font-weight:600; display:block; margin-bottom:6px; }
+    .required { color:red; }
+    input, select, textarea {
+      width:100%; padding:10px 14px; border:1px solid #d0d5dd; border-radius:10px;
+      font-family:'Poppins',sans-serif; font-size:14px; outline:none;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color:var(--primary-light); box-shadow:0 0 0 2px rgba(26,35,126,0.1);
+    }
+
+    .btn {
+      padding:10px 24px; border-radius:10px; font-size:13px; font-weight:600;
+      font-family:'Poppins',sans-serif; cursor:pointer; border:none;
+      display:inline-flex; align-items:center; gap:6px;
+    }
+    .btn-primary { background:var(--primary); color:white; }
+    .btn-primary:hover { background:var(--primary-light); }
+    .btn-outline { background:transparent; border:1px solid #ccc; color:var(--text); }
+    .btn-outline:hover { border-color:var(--primary); color:var(--primary); }
+
+    .form-actions {
+      display:flex; gap:10px; margin-top:16px; justify-content:flex-end;
+    }
+
+    .ql-editor { min-height: 300px; font-size:14px; }
+    .ql-toolbar { border-radius:10px 10px 0 0; border:1px solid #d0d5dd; }
+    .ql-container { border-radius:0 0 10px 10px; border:1px solid #d0d5dd; border-top:none; }
+    #fallback-editor { display:none; min-height: 300px; }
+
+    .toast {
+      position:fixed; bottom:24px; right:24px; padding:14px 24px; border-radius:12px;
+      color:white; font-size:14px; font-weight:500; z-index:9999;
+      box-shadow:0 4px 20px rgba(0,0,0,0.2);
+    }
+    .toast.success { background:var(--success); }
+    .toast.error { background:var(--danger); }
+    .toast.info { background:#1a237e; }
+
+    #debug-info {
+      margin-top:16px; padding:12px; background:#f5f5f5; border-radius:8px;
+      font-size:13px; color:#555; display:none;
+    }
+  </style>
 </head>
 <body>
+
 <nav class="navbar">
-<a href="index.html"><i class="fas fa-home"></i> Home</a>
-<span>📖 Generator E‑Book</span>
-<div></div>
+  <a href="index.html"><i class="fas fa-home"></i> Home</a>
+  <span>📖 Generator E‑Book</span>
+  <div></div>
 </nav>
 
 <main class="container">
-<div class="card">
-<h3><i class="fas fa-pen-alt"></i> Buat E‑Book Baru</h3>
-<form id="ebookForm">
-<div class="form-grid">
-<div class="form-group full-width">
-<label>Judul <span class="required">*</span></label>
-<input type="text" id="eb-judul" required placeholder="Judul e‑book">
-</div>
-<div class="form-group">
-<label>Pengarang</label>
-<input type="text" id="eb-pengarang" placeholder="Nama penulis">
-</div>
-<div class="form-group">
-<label>Penerbit</label>
-<input type="text" id="eb-penerbit" placeholder="Penerbit">
-</div>
-<div class="form-group">
-<label>Tahun</label>
-<input type="number" id="eb-tahun" placeholder="2025" min="1900" max="2099">
-</div>
-<div class="form-group">
-<label>Kategori <span class="required">*</span></label>
-<select id="eb-kategori" required>
-<option value="">-- Pilih Kategori --</option>
-</select>
-</div>
-<div class="form-group">
-<label>Bahasa</label>
-<select id="eb-bahasa">
-<option value="Indonesia">Indonesia</option>
-<option value="English">English</option>
-<option value="Arabic">Arabic</option>
-<option value="Lainnya">Lainnya</option>
-</select>
-</div>
-<div class="form-group full-width">
-<label>Sinopsis</label>
-<textarea id="eb-sinopsis" rows="3" placeholder="Deskripsi singkat..."></textarea>
-</div>
-<div class="form-group full-width">
-<label>Konten E‑Book <span class="required">*</span></label>
-<div style="margin-bottom:8px;">
-<button type="button" class="btn btn-outline" onclick="isiContohKonten()">
-<i class="fas fa-magic"></i> Isi Contoh
-</button>
-</div>
-<div id="quill-editor"></div>
-<textarea id="fallback-editor" placeholder="Tulis konten di sini..."></textarea>
-</div>
-</div>
-<div class="form-actions">
-<button type="button" class="btn btn-outline" onclick="document.getElementById('ebookForm').reset()">
-<i class="fas fa-redo"></i> Reset
-</button>
-<button type="button" class="btn btn-primary" id="ebookSubmitBtn" onclick="generatePDF()">
-<i class="fas fa-file-pdf"></i> Generate PDF & Simpan
-</button>
-</div>
-</form>
-<div id="debug-info"></div>
-</div>
+  <div class="card">
+    <h3><i class="fas fa-pen-alt"></i> Buat E‑Book Baru</h3>
+    <form id="ebookForm">
+      <div class="form-grid">
+        <div class="form-group full-width">
+          <label>Judul <span class="required">*</span></label>
+          <input type="text" id="eb-judul" required placeholder="Judul e‑book">
+        </div>
+        <div class="form-group">
+          <label>Pengarang</label>
+          <input type="text" id="eb-pengarang" placeholder="Nama penulis">
+        </div>
+        <div class="form-group">
+          <label>Penerbit</label>
+          <input type="text" id="eb-penerbit" placeholder="Penerbit">
+        </div>
+        <div class="form-group">
+          <label>Tahun</label>
+          <input type="number" id="eb-tahun" placeholder="2025" min="1900" max="2099">
+        </div>
+        <div class="form-group">
+          <label>Kategori <span class="required">*</span></label>
+          <select id="eb-kategori" required>
+            <option value="">-- Pilih Kategori --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Bahasa</label>
+          <select id="eb-bahasa">
+            <option value="Indonesia">Indonesia</option>
+            <option value="English">English</option>
+            <option value="Arabic">Arabic</option>
+            <option value="Lainnya">Lainnya</option>
+          </select>
+        </div>
+        <div class="form-group full-width">
+          <label>Sinopsis</label>
+          <textarea id="eb-sinopsis" rows="3" placeholder="Deskripsi singkat..."></textarea>
+        </div>
+        <div class="form-group full-width">
+          <label>Konten E‑Book <span class="required">*</span></label>
+          <div style="margin-bottom:8px;">
+            <button type="button" class="btn btn-outline" onclick="isiContohKonten()">
+              <i class="fas fa-magic"></i> Isi Contoh
+            </button>
+          </div>
+          <div id="quill-editor"></div>
+          <textarea id="fallback-editor" placeholder="Tulis konten di sini..."></textarea>
+        </div>
+      </div>
+
+      <!-- TOMBOL AKSI -->
+      <div class="form-actions">
+        <button type="button" class="btn btn-outline" onclick="document.getElementById('ebookForm').reset()">
+          <i class="fas fa-redo"></i> Reset
+        </button>
+        <button type="button" class="btn btn-primary" id="ebookSubmitBtn" onclick="generatePDF()">
+          <i class="fas fa-file-pdf"></i> Generate PDF & Simpan
+        </button>
+      </div>
+    </form>
+    <div id="debug-info"></div>
+  </div>
 </main>
 
 <div id="toast" class="toast" style="display:none;"></div>
 
 <script>
-// =====================
-// KONFIGURASI SUPABASE
-// =====================
-const SUPABASE_URL = 'https://wntclktbqmygxdodcmwb.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_UFXV4YyOnRk70FQGHSEeCw_ad4RTwrM';
+  // =====================
+  // KONFIGURASI SUPABASE
+  // =====================
+  const SUPABASE_URL = 'https://gcbubfexbzaymctnpcjo.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_rhGt1dDp9yYYOdc3gqHlQg_Wkbo8gf4';
+  var supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Inisialisasi Supabase
-var supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  let quill = null;
 
-// State
-let quill = null;
+  // Helper
+  const escapeHtml = text => String(text).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 
-// Helper
-const escapeHtml = text => String(text).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const showToast = (msg, type='success') => {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = `toast ${type}`;
+    t.style.display = 'block';
+    setTimeout(() => t.style.display = 'none', 4000);
+  };
 
-const showToast = (msg, type='success') => {
-const t = document.getElementById('toast');
-t.textContent = msg;
-t.className = `toast ${type}`;
-t.style.display = 'block';
-setTimeout(() => t.style.display = 'none', 4000);
-};
+  const debugInfo = msg => {
+    const d = document.getElementById('debug-info');
+    d.style.display = 'block';
+    d.innerHTML += `<div>${msg}</div>`;
+  };
 
-const debugInfo = msg => {
-const d = document.getElementById('debug-info');
-d.style.display = 'block';
-d.innerHTML += `<div>${msg}</div>`;
-};
+  // Init Quill
+  function initEditor() {
+    if (typeof Quill === 'undefined') {
+      document.getElementById('fallback-editor').style.display = 'block';
+      document.getElementById('quill-editor').style.display = 'none';
+      return;
+    }
+    try {
+      quill = new Quill('#quill-editor', {
+        theme: 'snow',
+        modules: {
+          toolbar: [
+            [{ header: [1,2,3,false] }],
+            ['bold','italic','underline'],
+            [{ list: 'ordered'}, { list: 'bullet' }],
+            ['link'],['clean']
+          ]
+        }
+      });
+      document.getElementById('quill-editor').style.display = 'block';
+      document.getElementById('fallback-editor').style.display = 'none';
+    } catch(e) {
+      document.getElementById('fallback-editor').style.display = 'block';
+      document.getElementById('quill-editor').style.display = 'none';
+    }
+  }
 
-// Init Quill
-function initEditor() {
-if (typeof Quill === 'undefined') {
-document.getElementById('fallback-editor').style.display = 'block';
-document.getElementById('quill-editor').style.display = 'none';
-return;
-}
-try {
-quill = new Quill('#quill-editor', {
-theme: 'snow',
-modules: {
-toolbar: [
-[{ header: [1,2,3,false] }],
-['bold','italic','underline'],
-[{ list: 'ordered'}, { list: 'bullet' }],
-['link'],['clean']
-]
-}
-});
-document.getElementById('quill-editor').style.display = 'block';
-document.getElementById('fallback-editor').style.display = 'none';
-} catch(e) {
-document.getElementById('fallback-editor').style.display = 'block';
-document.getElementById('quill-editor').style.display = 'none';
-}
-}
+  // Load categories from Supabase
+  async function loadCategories() {
+    try {
+      const { data, error } = await supabaseClient.from('categories').select('*');
+      if (error) throw error;
+      const sel = document.getElementById('eb-kategori');
+      sel.innerHTML = '<option value="">-- Pilih Kategori --</option>';
+      data.forEach(c => {
+        sel.innerHTML += `<option value="${c.id}">${c.icon||''} ${escapeHtml(c.nama)}</option>`;
+      });
+      debugInfo('✅ Kategori dimuat');
+    } catch (err) {
+      debugInfo('❌ Gagal memuat kategori: ' + err.message);
+    }
+  }
 
-// Load categories from Supabase
-async function loadCategories() {
-try {
-const { data, error } = await supabaseClient.from('categories').select('*');
-if (error) throw error;
-const sel = document.getElementById('eb-kategori');
-sel.innerHTML = '<option value="">-- Pilih Kategori --</option>';
-data.forEach(c => {
-sel.innerHTML += `<option value="${c.id}">${c.icon||''} ${escapeHtml(c.nama)}</option>`;
-});
-debugInfo('✅ Kategori dimuat dari Supabase');
-} catch (err) {
-debugInfo('❌ Gagal memuat kategori: ' + err.message);
-}
-}
+  // Sample content
+  function isiContohKonten() {
+    const contoh = `<h1>Bab 1: Pendahuluan</h1><p>Ini adalah contoh paragraf pendahuluan.</p><p class="page-break"></p><h1>Bab 2: Isi</h1><p>Konten utama di sini.</p>`;
+    if (quill) quill.root.innerHTML = contoh;
+    else document.getElementById('fallback-editor').value = contoh.replace(/<[^>]*>/g, '');
+    showToast('Konten contoh diisi!');
+  }
 
-// Sample content
-function isiContohKonten() {
-const contoh = `<h1>Bab 1: Pendahuluan</h1><p>Ini adalah contoh paragraf pendahuluan.</p><p class="page-break"></p><h1>Bab 2: Isi</h1><p>Konten utama di sini.</p>`;
-if (quill) quill.root.innerHTML = contoh;
-else document.getElementById('fallback-editor').value = contoh.replace(/<[^>]*>/g, '');
-showToast('Konten contoh diisi!');
-}
+  // Generate PDF & Save to Supabase
+  async function generatePDF() {
+    const btn = document.getElementById('ebookSubmitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menghasilkan PDF...';
+    debugInfo('▶️ Proses dimulai...');
 
-// Generate PDF & Save to Supabase
-async function generatePDF() {
-const btn = document.getElementById('ebookSubmitBtn');
-btn.disabled = true;
-btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menghasilkan PDF...';
-debugInfo('▶️ Proses dimulai...');
+    let htmlContent = '';
+    if (quill) htmlContent = quill.root.innerHTML;
+    else {
+      const txt = document.getElementById('fallback-editor').value;
+      htmlContent = '<p>' + txt.replace(/\n/g, '</p><p>') + '</p>';
+    }
 
-// Get content
-let htmlContent = '';
-if (quill) {
-htmlContent = quill.root.innerHTML;
-} else {
-const txt = document.getElementById('fallback-editor').value;
-htmlContent = '<p>' + txt.replace(/\n/g, '</p><p>') + '</p>';
-}
+    if (!htmlContent || htmlContent === '<p><br></p>') {
+      showToast('Konten tidak boleh kosong!', 'error');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-file-pdf"></i> Generate PDF & Simpan';
+      return;
+    }
 
-if (!htmlContent || htmlContent === '<p><br></p>') {
-showToast('Konten tidak boleh kosong!', 'error');
-btn.disabled = false;
-btn.innerHTML = '<i class="fas fa-file-pdf"></i> Generate PDF & Simpan';
-return;
-}
+    const pdfElement = document.createElement('div');
+    pdfElement.innerHTML = `<div style="font-family:'Times New Roman',serif; font-size:12pt; line-height:1.5; padding:2cm;">${htmlContent}</div>`;
+    document.body.appendChild(pdfElement);
 
-// Wrap HTML for PDF
-const pdfElement = document.createElement('div');
-pdfElement.innerHTML = `
-<div style="font-family:'Times New Roman',serif; font-size:12pt; line-height:1.5; padding:2cm;">
-${htmlContent}
-</div>
-`;
-document.body.appendChild(pdfElement);
+    try {
+      const pdfBlob = await html2pdf().set({
+        margin: [2, 2, 2, 2],
+        filename: document.getElementById('eb-judul').value + '.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'cm', format: 'a4', orientation: 'portrait' }
+      }).from(pdfElement).outputPdf('blob');
 
-try {
-// Generate PDF blob
-const pdfBlob = await html2pdf().set({
-margin: [2, 2, 2, 2],
-filename: document.getElementById('eb-judul').value + '.pdf',
-image: { type: 'jpeg', quality: 0.98 },
-html2canvas: { scale: 2 },
-jsPDF: { unit: 'cm', format: 'a4', orientation: 'portrait' }
-}).from(pdfElement).outputPdf('blob');
+      document.body.removeChild(pdfElement);
 
-document.body.removeChild(pdfElement);
+      const bookData = {
+        judul: document.getElementById('eb-judul').value,
+        pengarang: document.getElementById('eb-pengarang').value,
+        penerbit: document.getElementById('eb-penerbit').value,
+        tahun: parseInt(document.getElementById('eb-tahun').value) || null,
+        kategori_id: parseInt(document.getElementById('eb-kategori').value),
+        bahasa: document.getElementById('eb-bahasa').value,
+        sinopsis: document.getElementById('eb-sinopsis').value,
+        file_url: ''
+      };
 
-// Save metadata to Supabase
-const bookData = {
-judul: document.getElementById('eb-judul').value,
-pengarang: document.getElementById('eb-pengarang').value,
-penerbit: document.getElementById('eb-penerbit').value,
-tahun: parseInt(document.getElementById('eb-tahun').value) || null,
-kategori_id: parseInt(document.getElementById('eb-kategori').value),
-bahasa: document.getElementById('eb-bahasa').value,
-sinopsis: document.getElementById('eb-sinopsis').value,
-// Simpan PDF ke Supabase Storage (opsional) – kita hanya simpan metadata dulu
-file_url: '' // Bisa di-upload ke Supabase Storage nanti
-};
+      const { error: insertError } = await supabaseClient.from('books').insert(bookData);
+      if (insertError) throw insertError;
 
-const { error: insertError } = await supabaseClient.from('books').insert(bookData);
-if (insertError) throw insertError;
+      const url = URL.createObjectURL(pdfBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = bookData.judul + '.pdf';
+      a.click();
+      URL.revokeObjectURL(url);
 
-// Unduh PDF ke komputer user
-const url = URL.createObjectURL(pdfBlob);
-const a = document.createElement('a');
-a.href = url;
-a.download = bookData.judul + '.pdf';
-a.click();
-URL.revokeObjectURL(url);
+      showToast('E‑book berhasil dibuat dan disimpan!');
+      document.getElementById('ebookForm').reset();
+      if (quill) quill.setContents([]);
+    } catch (err) {
+      showToast('Gagal: ' + err.message, 'error');
+      debugInfo('❌ Error: ' + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-file-pdf"></i> Generate PDF & Simpan';
+    }
+  }
 
-showToast('E‑book berhasil dibuat dan disimpan!');
-document.getElementById('ebookForm').reset();
-if (quill) quill.setContents([]);
-} catch (err) {
-showToast('Gagal: ' + err.message, 'error');
-debugInfo('❌ Error: ' + err.message);
-} finally {
-btn.disabled = false;
-btn.innerHTML = '<i class="fas fa-file-pdf"></i> Generate PDF & Simpan';
-}
-}
-
-// Init
-window.onload = () => {
-initEditor();
-loadCategories();
-debugInfo('📋 Halaman siap (Supabase mode)');
-};
+  // Init
+  window.onload = () => {
+    initEditor();
+    loadCategories();
+    debugInfo('📋 Halaman siap');
+  };
 </script>
 </body>
 </html>
